@@ -27,7 +27,8 @@ def github_auth(url, lsttoken, ct):
 def countfiles(dictfiles, lsttokens, repo):
     ipage = 1  # url page counter
     ct = 0  # token counter
-
+    directoryList = []                                      # modification: list of components of the file name
+    acceptedExtensions = ["cpp", "h", "java", "kt"]         # modification: list of source file extensions
     try:
         # loop though all the commit pages until the last returned empty page
         while True:
@@ -46,9 +47,14 @@ def countfiles(dictfiles, lsttokens, repo):
                 shaDetails, ct = github_auth(shaUrl, lsttokens, ct)
                 filesjson = shaDetails['files']
                 for filenameObj in filesjson:
-                    filename = filenameObj['filename']
-                    dictfiles[filename] = dictfiles.get(filename, 0) + 1
-                    print(filename)
+                    filename = filenameObj['filename']      
+                    directoryList = filename.split('/')                                 # modification: split file name by /
+                    fileExtension = directoryList[(len(directoryList) - 1)].split('.')  # modification: get file extension
+                    if len(fileExtension) > 1:                                          # modification: if there is a file extension, get it
+                        fileExtension = fileExtension[1]
+                    if fileExtension in acceptedExtensions:                             # modification: if source file, then continue
+                        dictfiles[filename] = dictfiles.get(filename, 0) + 1
+                        print(filename)
             ipage += 1
     except:
         print("Error receiving data")
@@ -64,7 +70,7 @@ repo = 'scottyab/rootbeer'
 # Remember to empty the list when going to commit to GitHub.
 # Otherwise they will all be reverted and you will have to re-create them
 # I would advise to create more than one token for repos with heavy commits
-lstTokens = [""]
+lstTokens = ["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"]
 
 dictfiles = dict()
 countfiles(dictfiles, lstTokens, repo)
@@ -87,8 +93,4 @@ for filename, count in dictfiles.items():
         bigcount = count
         bigfilename = filename
 fileCSV.close()
-<<<<<<< HEAD
 print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
-=======
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
->>>>>>> refixed merges

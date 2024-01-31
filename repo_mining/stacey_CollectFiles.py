@@ -1,8 +1,10 @@
 import json
 import requests
 import csv
-
 import os
+
+# adapted to only collect source files
+sourceCodeExtensions = [".java", ".cpp", ".h", '.c', '.kt']
 
 if not os.path.exists("data"):
  os.makedirs("data")
@@ -47,8 +49,13 @@ def countfiles(dictfiles, lsttokens, repo):
                 filesjson = shaDetails['files']
                 for filenameObj in filesjson:
                     filename = filenameObj['filename']
-                    dictfiles[filename] = dictfiles.get(filename, 0) + 1
-                    print(filename)
+
+                    # Get file extension
+                    fileExt = filename[filename.rfind('.'):].lower()
+
+                    # check if source file
+                    if(fileExt in sourceCodeExtensions):
+                        dictfiles[filename] = dictfiles.get(filename, 0) + 1
             ipage += 1
     except:
         print("Error receiving data")
@@ -64,7 +71,7 @@ repo = 'scottyab/rootbeer'
 # Remember to empty the list when going to commit to GitHub.
 # Otherwise they will all be reverted and you will have to re-create them
 # I would advise to create more than one token for repos with heavy commits
-lstTokens = [""]
+lstTokens = []
 
 dictfiles = dict()
 countfiles(dictfiles, lstTokens, repo)
@@ -87,8 +94,4 @@ for filename, count in dictfiles.items():
         bigcount = count
         bigfilename = filename
 fileCSV.close()
-<<<<<<< HEAD
 print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
-=======
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
->>>>>>> refixed merges

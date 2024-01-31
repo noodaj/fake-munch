@@ -1,8 +1,10 @@
 import json
 import requests
 import csv
-
 import os
+
+# adapted to only collect source files
+sourceCodeExtensions = [".java", ".cpp", ".h", '.c', '.kt']
 
 if not os.path.exists("data"):
  os.makedirs("data")
@@ -24,9 +26,10 @@ def github_auth(url, lsttoken, ct):
 # @dictFiles, empty dictionary of files
 # @lstTokens, GitHub authentication tokens
 # @repo, GitHub repo
-def countfiles(dictfiles, lsttokens, repo):
+def getFilesInfo(dictfiles, lsttokens, repo):
     ipage = 1  # url page counter
     ct = 0  # token counter
+    filesInfo = []
 
     try:
         # loop though all the commit pages until the last returned empty page
@@ -47,9 +50,17 @@ def countfiles(dictfiles, lsttokens, repo):
                 filesjson = shaDetails['files']
                 for filenameObj in filesjson:
                     filename = filenameObj['filename']
-                    dictfiles[filename] = dictfiles.get(filename, 0) + 1
-                    print(filename)
+
+                    # Get file extension
+                    fileExt = filename[filename.rfind('.'):].lower()
+
+                    # check if source file, then save filename, name, and date
+                    if(fileExt in sourceCodeExtensions):
+                        name = shaDetails["commit"]["author"]["name"]
+                        date = shaDetails["commit"]["author"]["date"]
+                        filesInfo.append([filename, name, date])
             ipage += 1
+        return filesInfo
     except:
         print("Error receiving data")
         exit(0)
@@ -64,31 +75,20 @@ repo = 'scottyab/rootbeer'
 # Remember to empty the list when going to commit to GitHub.
 # Otherwise they will all be reverted and you will have to re-create them
 # I would advise to create more than one token for repos with heavy commits
-lstTokens = [""]
+lstTokens = []
 
 dictfiles = dict()
-countfiles(dictfiles, lstTokens, repo)
-print('Total number of files: ' + str(len(dictfiles)))
+filesInfo = getFilesInfo(dictfiles, lstTokens, repo)
 
 file = repo.split('/')[1]
 # change this to the path of your file
-fileOutput = 'data/file_' + file + '.csv'
-rows = ["Filename", "Touches"]
+fileOutput = 'data/file_info_' + file + '.csv'
+rows = ["Filename", "Name", "Date"]
 fileCSV = open(fileOutput, 'w')
 writer = csv.writer(fileCSV)
 writer.writerow(rows)
 
-bigcount = None
-bigfilename = None
-for filename, count in dictfiles.items():
-    rows = [filename, count]
+for filename, name, date in filesInfo:
+    rows = [filename, name, date]
     writer.writerow(rows)
-    if bigcount is None or count > bigcount:
-        bigcount = count
-        bigfilename = filename
 fileCSV.close()
-<<<<<<< HEAD
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
-=======
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
->>>>>>> refixed merges

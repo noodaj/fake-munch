@@ -7,6 +7,9 @@ import os
 if not os.path.exists("data"):
  os.makedirs("data")
 
+#Valid Extensions
+valid_extensions = ['.py', '.java', '.cpp', '.h', '.js', '.html', '.c', '.kt']
+
 # GitHub Authentication function
 def github_auth(url, lsttoken, ct):
     jsonData = None
@@ -47,8 +50,9 @@ def countfiles(dictfiles, lsttokens, repo):
                 filesjson = shaDetails['files']
                 for filenameObj in filesjson:
                     filename = filenameObj['filename']
-                    dictfiles[filename] = dictfiles.get(filename, 0) + 1
-                    print(filename)
+                    if any(filename.endswith(ext) for ext in valid_extensions):
+                        dictfiles[filename] = dictfiles.get(filename, 0) + 1
+                        print(filename)
             ipage += 1
     except:
         print("Error receiving data")
@@ -64,7 +68,7 @@ repo = 'scottyab/rootbeer'
 # Remember to empty the list when going to commit to GitHub.
 # Otherwise they will all be reverted and you will have to re-create them
 # I would advise to create more than one token for repos with heavy commits
-lstTokens = [""]
+lstTokens = []
 
 dictfiles = dict()
 countfiles(dictfiles, lstTokens, repo)
@@ -87,8 +91,4 @@ for filename, count in dictfiles.items():
         bigcount = count
         bigfilename = filename
 fileCSV.close()
-<<<<<<< HEAD
 print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
-=======
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
->>>>>>> refixed merges

@@ -87,8 +87,4 @@ for filename, count in dictfiles.items():
         bigcount = count
         bigfilename = filename
 fileCSV.close()
-<<<<<<< HEAD
 print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
-=======
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
->>>>>>> refixed merges

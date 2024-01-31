@@ -1,7 +1,7 @@
 import json
 import requests
 import csv
-
+import pathlib
 import os
 
 if not os.path.exists("data"):
@@ -24,9 +24,10 @@ def github_auth(url, lsttoken, ct):
 # @dictFiles, empty dictionary of files
 # @lstTokens, GitHub authentication tokens
 # @repo, GitHub repo
-def countfiles(dictfiles, lsttokens, repo):
+def countfiles(dictfiles, lsttokens, repo, dates, authors):
     ipage = 1  # url page counter
     ct = 0  # token counter
+    repoLangs = [".java", ".cpp", ".kt", ".h"]
 
     try:
         # loop though all the commit pages until the last returned empty page
@@ -45,10 +46,19 @@ def countfiles(dictfiles, lsttokens, repo):
                 shaUrl = 'https://api.github.com/repos/' + repo + '/commits/' + sha
                 shaDetails, ct = github_auth(shaUrl, lsttokens, ct)
                 filesjson = shaDetails['files']
+                fileAuthor = shaDetails['commit']['author']['name']                       
+                fileDate = shaDetails['commit']['author']['date'][0:10]                                      
                 for filenameObj in filesjson:
                     filename = filenameObj['filename']
-                    dictfiles[filename] = dictfiles.get(filename, 0) + 1
-                    print(filename)
+                    # get file extensions 
+                    fileExt = pathlib.Path(filename).suffix
+                    # check if in the repoLangs 
+                    if(fileExt in repoLangs):   
+                        dictfiles[filename] = dictfiles.get(filename, 0) + 1                                                                                       
+                        authors.setdefault(filename, [])
+                        authors[filename].append([fileAuthor, fileDate])                                                                  
+                        #print(filename)                                        
+                        #print(fileAuthor)                                        
             ipage += 1
     except:
         print("Error receiving data")
@@ -67,7 +77,9 @@ repo = 'scottyab/rootbeer'
 lstTokens = [""]
 
 dictfiles = dict()
-countfiles(dictfiles, lstTokens, repo)
+authors = dict()
+dates = dict()
+countfiles(dictfiles, lstTokens, repo, dates, authors)
 print('Total number of files: ' + str(len(dictfiles)))
 
 file = repo.split('/')[1]
@@ -78,17 +90,22 @@ fileCSV = open(fileOutput, 'w')
 writer = csv.writer(fileCSV)
 writer.writerow(rows)
 
-bigcount = None
-bigfilename = None
+touches = 0
 for filename, count in dictfiles.items():
     rows = [filename, count]
     writer.writerow(rows)
-    if bigcount is None or count > bigcount:
-        bigcount = count
-        bigfilename = filename
+    touches += count
 fileCSV.close()
-<<<<<<< HEAD
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
-=======
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
->>>>>>> refixed merges
+
+fileOutput2 = 'data/file_authors' + '.csv'
+rows2 = ["Filename", "Author", "Date"]
+fileCSV2 = open(fileOutput2, 'w')
+writer2 = csv.writer(fileCSV2)
+writer2.writerow(rows2)
+
+for filename, vals in authors.items():
+    for value in vals:
+        rows2 = [filename, value[0], value[1]]
+        writer2.writerow(rows2)
+fileCSV2.close()
+print('The files' + ' has been touched ' + str(touches) + ' times.')

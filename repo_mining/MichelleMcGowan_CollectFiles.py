@@ -1,6 +1,7 @@
 import json
 import requests
 import csv
+import pathlib
 
 import os
 
@@ -27,6 +28,7 @@ def github_auth(url, lsttoken, ct):
 def countfiles(dictfiles, lsttokens, repo):
     ipage = 1  # url page counter
     ct = 0  # token counter
+    repoLangs = [".java", ".cpp", ".kt", ".h"]
 
     try:
         # loop though all the commit pages until the last returned empty page
@@ -47,8 +49,12 @@ def countfiles(dictfiles, lsttokens, repo):
                 filesjson = shaDetails['files']
                 for filenameObj in filesjson:
                     filename = filenameObj['filename']
-                    dictfiles[filename] = dictfiles.get(filename, 0) + 1
-                    print(filename)
+                    # get file extensions 
+                    fileExt = pathlib.Path(filename).suffix
+                    # check if in the repoLangs 
+                    if(fileExt in repoLangs):
+                        dictfiles[filename] = dictfiles.get(filename, 0) + 1
+                        print(filename)                                        
             ipage += 1
     except:
         print("Error receiving data")
@@ -87,8 +93,4 @@ for filename, count in dictfiles.items():
         bigcount = count
         bigfilename = filename
 fileCSV.close()
-<<<<<<< HEAD
 print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
-=======
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
->>>>>>> refixed merges

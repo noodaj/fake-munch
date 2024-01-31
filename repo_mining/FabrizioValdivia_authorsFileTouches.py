@@ -1,11 +1,11 @@
 import json
 import requests
 import csv
-
 import os
+import pathlib
 
 if not os.path.exists("data"):
- os.makedirs("data")
+    os.makedirs("data")
 
 # GitHub Authentication function
 def github_auth(url, lsttoken, ct):
@@ -44,27 +44,31 @@ def countfiles(dictfiles, lsttokens, repo):
                 # For each commit, use the GitHub commit API to extract the files touched by the commit
                 shaUrl = 'https://api.github.com/repos/' + repo + '/commits/' + sha
                 shaDetails, ct = github_auth(shaUrl, lsttokens, ct)
+                author = shaDetails['commit']['author']['name']
+                date = shaDetails['commit']['author']['date']
                 filesjson = shaDetails['files']
+
                 for filenameObj in filesjson:
                     filename = filenameObj['filename']
-                    dictfiles[filename] = dictfiles.get(filename, 0) + 1
-                    print(filename)
+                    # dictfiles.setdefault(filename, []).append({'author': author, 'date': date})
+                    fileType = pathlib.Path(filename).suffix
+                    # check if in the repoLangs 
+                    if(fileType in [ ".cpp", ".java", ".kt", ".h"]):   
+                        dictfiles.setdefault(filename, []).append({'author': author, 'date': date})
+                        print(filename)
             ipage += 1
     except:
         print("Error receiving data")
         exit(0)
 # GitHub repo
 repo = 'scottyab/rootbeer'
-# repo = 'Skyscanner/backpack' # This repo is commit heavy. It takes long to finish executing
-# repo = 'k9mail/k-9' # This repo is commit heavy. It takes long to finish executing
-# repo = 'mendhak/gpslogger'
 
 
 # put your tokens here
 # Remember to empty the list when going to commit to GitHub.
 # Otherwise they will all be reverted and you will have to re-create them
 # I would advise to create more than one token for repos with heavy commits
-lstTokens = [""]
+lstTokens = ["16ce529bdb32263fb90a392d38b5f53c7ecb6b"]
 
 dictfiles = dict()
 countfiles(dictfiles, lstTokens, repo)
@@ -73,22 +77,14 @@ print('Total number of files: ' + str(len(dictfiles)))
 file = repo.split('/')[1]
 # change this to the path of your file
 fileOutput = 'data/file_' + file + '.csv'
-rows = ["Filename", "Touches"]
+rows = ["Filename", "Author", "Date"]
 fileCSV = open(fileOutput, 'w')
 writer = csv.writer(fileCSV)
 writer.writerow(rows)
 
-bigcount = None
-bigfilename = None
-for filename, count in dictfiles.items():
-    rows = [filename, count]
-    writer.writerow(rows)
-    if bigcount is None or count > bigcount:
-        bigcount = count
-        bigfilename = filename
+for filename, touches in dictfiles.items():
+    for touch in touches:
+        rows = [filename, touch['author'], touch['date']]
+        writer.writerow(rows)
+
 fileCSV.close()
-<<<<<<< HEAD
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
-=======
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
->>>>>>> refixed merges

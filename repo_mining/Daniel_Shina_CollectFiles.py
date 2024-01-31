@@ -47,8 +47,18 @@ def countfiles(dictfiles, lsttokens, repo):
                 filesjson = shaDetails['files']
                 for filenameObj in filesjson:
                     filename = filenameObj['filename']
-                    dictfiles[filename] = dictfiles.get(filename, 0) + 1
-                    print(filename)
+
+                    # Valid paths for rootbeerlib
+                    libPaths = ['rootbeerlib/src/main/java/', 'rootbeerlib/src/test/java', 'rootbeerlib/src/main/cpp']
+
+                    # Filter for source files
+                    if (any(path in filename for path in libPaths) and
+                            any(filename.endswith(ext) for ext in ['.java', '.cpp', '.h', '.txt']) or
+                            'app/src/main/' in filename and
+                            filename.endswith('.kt')):
+                        dictfiles[filename] = dictfiles.get(filename, 0) + 1
+                        print(filename)
+
             ipage += 1
     except:
         print("Error receiving data")
@@ -64,7 +74,7 @@ repo = 'scottyab/rootbeer'
 # Remember to empty the list when going to commit to GitHub.
 # Otherwise they will all be reverted and you will have to re-create them
 # I would advise to create more than one token for repos with heavy commits
-lstTokens = [""]
+lstTokens = ["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"]
 
 dictfiles = dict()
 countfiles(dictfiles, lstTokens, repo)
@@ -87,8 +97,4 @@ for filename, count in dictfiles.items():
         bigcount = count
         bigfilename = filename
 fileCSV.close()
-<<<<<<< HEAD
 print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
-=======
-print('The file ' + bigfilename + ' has been touched ' + str(bigcount) + ' times.')
->>>>>>> refixed merges
